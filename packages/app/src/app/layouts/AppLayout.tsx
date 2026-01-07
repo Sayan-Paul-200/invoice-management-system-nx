@@ -24,7 +24,7 @@ import { tokenManager } from '@lib/axios';
 export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const sidebarWidth = '250px';
+  const sidebarWidth = '200px';
 
   // --- Dark Mode Logic ---
   const { setColorScheme } = useMantineColorScheme();
