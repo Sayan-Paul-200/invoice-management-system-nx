@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Group, Select, Paper } from '@mantine/core';
+import { Group, Select, Paper, Button } from '@mantine/core'; // Added Button
 import { DatePickerInput, DatesRangeValue } from '@mantine/dates';
-import { IconCalendar } from '@tabler/icons-react';
+import { IconCalendar, IconFilterOff } from '@tabler/icons-react'; // Added IconFilterOff
 import '@mantine/dates/styles.css';
 
 export interface FilterState {
   project: string | null;
   state: string | null;
   status: string | null;
+  billCategory: string | null;
   dateRange: [Date | null, Date | null];
 }
 
@@ -15,6 +16,7 @@ interface DashboardFiltersProps {
   projects: string[];
   states: string[];
   statuses: string[];
+  billCategories: string[];
   filters: FilterState;
   onFilterChange: (newFilters: FilterState) => void;
 }
@@ -23,11 +25,12 @@ export function DashboardFilters({
   projects, 
   states, 
   statuses, 
+  billCategories,
   filters, 
   onFilterChange 
 }: DashboardFiltersProps) {
   
-  // --- Financial Year Logic ---
+  // --- Financial Year Presets Logic ---
   const [fyPresets, setFyPresets] = useState<{ label: string; value: [Date, Date] }[]>([]);
 
   useEffect(() => {
@@ -36,8 +39,6 @@ export function DashboardFilters({
       const currentMonth = today.getMonth(); // 0-11
       const currentYear = today.getFullYear();
       
-      // If current month is April (3) or later, FY started this year. 
-      // Else, it started last year.
       const startYear = currentMonth >= 3 ? currentYear : currentYear - 1;
       
       const presets = [];
@@ -46,9 +47,8 @@ export function DashboardFilters({
         const nextY = y + 1;
         const shortNextY = nextY.toString().slice(-2);
         
-        // Construct standard FY range: April 1st to March 31st
-        const startDate = new Date(y, 3, 1); // April 1st
-        const endDate = new Date(nextY, 2, 31); // March 31st
+        const startDate = new Date(y, 3, 1); 
+        const endDate = new Date(nextY, 2, 31); 
         
         presets.push({
           label: `FY ${y}-${shortNextY}`,
@@ -60,35 +60,25 @@ export function DashboardFilters({
     setFyPresets(generateFYPresets());
   }, []);
 
-  // Helper to calculate Date Range from FY string
-  const getRangeFromFY = (fyString: string): [Date, Date] => {
-    // Expected format: "FY 2025-26"
-    const startYearStr = fyString.split(' ')[1].split('-')[0]; // "2025"
-    const startYear = parseInt(startYearStr);
-    
-    const startDate = new Date(startYear, 3, 1); // April 1st
-    const endDate = new Date(startYear + 1, 2, 31); // March 31st next year
-    
-    return [startDate, endDate];
-  };
-
-  // --- Handlers ---
-
-  const handleFYChange = (value: string | null) => {
-    if (value) {
-      const newRange = getRangeFromFY(value);
-      onFilterChange({ ...filters, fy: value, dateRange: newRange });
-    } else {
-      onFilterChange({ ...filters, fy: null, dateRange: [null, null] });
-    }
-  };
-
   const handleDateRangeChange = (value: DatesRangeValue) => {
-    onFilterChange({ ...filters, dateRange: value as [Date | null, Date | null] });
+    const start = value[0] ? new Date(value[0]) : null;
+    const end = value[1] ? new Date(value[1]) : null;
+    onFilterChange({ ...filters, dateRange: [start, end] });
+  };
+
+  // --- Added: Clear Filters Handler ---
+  const handleClearFilters = () => {
+    onFilterChange({
+      project: null,
+      state: null,
+      status: null,
+      billCategory: null,
+      dateRange: [null, null],
+    });
   };
 
   return (
-    <Paper shadow="xs" radius="md" p="md" mb="lg">
+    <Paper withBorder shadow="sm" radius="md" p="md">
       <Group justify="flex-start" gap="md">
         
         {/* 1. Select Project */}
@@ -100,6 +90,7 @@ export function DashboardFilters({
           searchable
           clearable
           style={{ flex: 1, minWidth: '160px' }}
+          nothingFoundMessage="Nothing found..."
         />
 
         {/* 2. Select State */}
@@ -111,9 +102,22 @@ export function DashboardFilters({
           searchable
           clearable
           style={{ flex: 1, minWidth: '160px' }}
+          nothingFoundMessage="Nothing found..."
         />
 
-        {/* 3. Select Status */}
+        {/* 3. Select Bill Category */}
+        <Select
+          placeholder="All Categories"
+          data={billCategories}
+          value={filters.billCategory}
+          onChange={(val) => onFilterChange({ ...filters, billCategory: val })}
+          searchable
+          clearable
+          style={{ flex: 1, minWidth: '160px' }}
+          nothingFoundMessage="Nothing found..."
+        />
+
+        {/* 4. Select Status */}
         <Select
           placeholder="All Status"
           data={statuses}
@@ -123,7 +127,7 @@ export function DashboardFilters({
           style={{ flex: 1, minWidth: '140px' }}
         />
 
-        {/* 4. Date Range with FY Presets */}
+        {/* 5. Date Range with FY Presets */}
         <DatePickerInput
           type="range"
           placeholder="Select Date Range or FY"
@@ -134,6 +138,16 @@ export function DashboardFilters({
           presets={fyPresets}
           style={{ flex: 1.5, minWidth: '220px' }}
         />
+
+        {/* 6. Added: Clear Filters Button */}
+        <Button 
+          variant="light" 
+          color="red" 
+          leftSection={<IconFilterOff size={16} />}
+          onClick={handleClearFilters}
+        >
+          Clear
+        </Button>
 
       </Group>
     </Paper>

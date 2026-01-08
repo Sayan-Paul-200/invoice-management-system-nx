@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Paper, Stack, Group, Text, Divider } from '@mantine/core';
+import { Paper, Stack, Group, Text, Divider, Title } from '@mantine/core';
 import { Invoice } from '@lib/invoices';
 
 interface DeductionsBoxProps {
@@ -42,7 +42,8 @@ export function DeductionsBox({ invoices }: DeductionsBoxProps) {
       <Stack justify="space-between" h="100%">
         <div>
           <Group justify="space-between" mb="md">
-            <Text fw={600} c="dimmed">DEDUCTIONS</Text>
+            {/* <Text fw={600} c="dimmed">DEDUCTIONS</Text> */}
+            <Title order={5} mb="lg" ta="center">DEDUCTIONS</Title>
           </Group>
           
           <Stack gap="xs">

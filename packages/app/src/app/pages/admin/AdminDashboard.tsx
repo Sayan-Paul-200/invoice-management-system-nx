@@ -18,30 +18,33 @@ import { DashboardFilters, FilterState } from '@components/dashboard/DashboardFi
 
 const AdminDashboard = () => {
   // --- Filter State ---
-  // Updated: Removed 'fy' as it is now handled internally by dateRange presets
   const [filters, setFilters] = useState<FilterState>({
     project: null,
     state: null,
     status: null,
+    billCategory: null, // Added
     dateRange: [null, null]
   });
 
   // --- 1. Extract Filter Options from Data ---
-  const { projects, states, statuses } = useMemo(() => {
+  const { projects, states, statuses, billCategories } = useMemo(() => {
     const p = new Set<string>();
     const s = new Set<string>();
     const st = new Set<string>();
+    const bc = new Set<string>(); // Added
 
     DUMMY_INVOICES.forEach(inv => {
       if(inv.project) p.add(inv.project);
       if(inv.state) s.add(inv.state);
       if(inv.status) st.add(inv.status);
+      if(inv.billCategory) bc.add(inv.billCategory); // Added
     });
 
     return {
       projects: Array.from(p).sort(),
       states: Array.from(s).sort(),
       statuses: Array.from(st).sort(),
+      billCategories: Array.from(bc).sort(), // Added
     };
   }, []);
 
@@ -54,17 +57,26 @@ const AdminDashboard = () => {
       // B. State Filter
       if (filters.state && inv.state !== filters.state) return false;
       
-      // C. Status Filter
+      // C. Bill Category Filter (Added)
+      if (filters.billCategory && inv.billCategory !== filters.billCategory) return false;
+
+      // D. Status Filter
       if (filters.status && inv.status !== filters.status) return false;
 
-      // D. Date Range Filter
+      // E. Date Range Filter
       const [start, end] = filters.dateRange;
       if (start && end) {
         const invDate = new Date(inv.invoiceDate);
-        // Normalize times to compare dates only
-        const checkDate = new Date(invDate.setHours(0,0,0,0));
-        const startDate = new Date(start.setHours(0,0,0,0));
-        const endDate = new Date(end.setHours(23,59,59,999));
+        
+        // Safe Date Creation to avoid mutation
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        
+        const checkDate = new Date(invDate);
+        checkDate.setHours(0, 0, 0, 0);
 
         if (checkDate < startDate || checkDate > endDate) return false;
       }
@@ -110,6 +122,7 @@ const AdminDashboard = () => {
         projects={projects}
         states={states}
         statuses={statuses}
+        billCategories={billCategories} // Added
         filters={filters}
         onFilterChange={setFilters}
       />
@@ -135,12 +148,12 @@ const AdminDashboard = () => {
         </Grid.Col>
 
         {/* 2. Bar Chart */}
-        <Grid.Col span={{ base: 12, md: 8, lg: 5 }}>
+        <Grid.Col span={{ base: 12, md: 8, lg: 6 }}>
           <InvoiceStateBarChart invoices={filteredInvoices} />
         </Grid.Col>
 
         {/* 3. Donut Chart */}
-        <Grid.Col span={{ base: 12, md: 12, lg: 4 }}>
+        <Grid.Col span={{ base: 12, md: 12, lg: 3 }}>
           <InvoiceStatusDonutChart invoices={filteredInvoices} />
         </Grid.Col>
       </Grid>

@@ -12,7 +12,7 @@ import {
   rem,
   Paper,
   ThemeIcon,
-  Text,
+  // Text,
   Box
 } from '@mantine/core';
 import { IconSun, IconMoon, IconLogout, IconLayoutDashboard } from '@tabler/icons-react';

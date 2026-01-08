@@ -1,16 +1,13 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   Table, 
   Checkbox, 
   ScrollArea, 
   Group, 
-  Avatar, 
   Text, 
   Badge, 
   ActionIcon, 
   rem,
-  StyleProp,
-  Box,
   UnstyledButton,
   Center
 } from '@mantine/core';
@@ -23,19 +20,21 @@ import {
   IconChevronUp 
 } from '@tabler/icons-react';
 import { Invoice } from '@lib/invoices';
-import classes from './InvoiceTable.module.scss'; // Assuming you might use CSS modules, or inline styles for simplicity
+import classes from './InvoiceTable.module.scss'; 
 
 interface InvoiceTableProps {
   data: Invoice[];
   columns?: (keyof Invoice)[];
   actions?: boolean;
-  dashboardTable?: boolean; // Maps to your 'dashboard_table' requirement
-  multiSelection?: boolean; // Maps to 'multi-selection'
+  dashboardTable?: boolean; 
+  multiSelection?: boolean; 
   sort?: boolean;
   style?: React.CSSProperties;
+  // Added optional props for controlled selection
+  selection?: number[];
+  onSelectionChange?: (selectedIds: number[]) => void;
 }
 
-// Default columns as requested
 const DEFAULT_COLUMNS: (keyof Invoice)[] = [
   'invoiceNumber',
   'invoiceDate',
@@ -49,7 +48,6 @@ const DEFAULT_COLUMNS: (keyof Invoice)[] = [
   'status',
 ];
 
-// Human-readable headers mapping
 const HEADER_LABELS: Partial<Record<keyof Invoice, string>> = {
   invoiceNumber: 'Invoice No',
   invoiceDate: 'Invoice Date',
@@ -63,11 +61,9 @@ const HEADER_LABELS: Partial<Record<keyof Invoice, string>> = {
   status: 'Status',
 };
 
-// Helper for Currency Formatting
 const formatCurrency = (amount: number) => 
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
-// Helper for Status Badge Color
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Paid': return 'teal';
@@ -78,7 +74,6 @@ const getStatusColor = (status: string) => {
   }
 };
 
-// Helper to parse "30 Jun 25" to Date object
 const parseDate = (dateString: string) => new Date(dateString);
 
 export function InvoiceTable({
@@ -88,27 +83,37 @@ export function InvoiceTable({
   dashboardTable = false,
   multiSelection = false,
   sort = false,
-  style
+  style,
+  selection: controlledSelection,
+  onSelectionChange
 }: InvoiceTableProps) {
-  const [selection, setSelection] = useState<number[]>([]);
+  // Internal state for when component is uncontrolled
+  const [internalSelection, setInternalSelection] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState<keyof Invoice | null>(null);
   const [reverseSortDirection, setReverseSortDirection] = useState(false);
   
-  // 1. Filter Data (Dashboard Mode: Latest 10)
+  // Use controlled selection if provided, otherwise use internal state
+  const currentSelection = controlledSelection !== undefined ? controlledSelection : internalSelection;
+
+  const handleSelectionChange = (newSelection: number[]) => {
+    if (onSelectionChange) {
+      onSelectionChange(newSelection);
+    } else {
+      setInternalSelection(newSelection);
+    }
+  };
+  
   const filteredData = useMemo(() => {
     let processedData = [...data];
 
     if (dashboardTable) {
-      // Sort by Date Descending first to get "Latest"
       processedData.sort((a, b) => parseDate(b.invoiceDate).getTime() - parseDate(a.invoiceDate).getTime());
-      // Take top 10
       processedData = processedData.slice(0, 10);
     }
 
     return processedData;
   }, [data, dashboardTable]);
 
-  // 2. Sort Data (User Interaction)
   const sortedData = useMemo(() => {
     if (!sortBy) return filteredData;
 
@@ -116,9 +121,7 @@ export function InvoiceTable({
       const valueA = a[sortBy];
       const valueB = b[sortBy];
 
-      // Handle String comparison
       if (typeof valueA === 'string' && typeof valueB === 'string') {
-        // specific check for date strings
         if (sortBy.toLowerCase().includes('date')) {
              return reverseSortDirection 
                 ? parseDate(valueA).getTime() - parseDate(valueB).getTime() 
@@ -129,7 +132,6 @@ export function InvoiceTable({
             : valueB.localeCompare(valueA);
       }
 
-      // Handle Number comparison
       if (typeof valueA === 'number' && typeof valueB === 'number') {
         return reverseSortDirection ? valueA - valueB : valueB - valueA;
       }
@@ -138,15 +140,19 @@ export function InvoiceTable({
     });
   }, [filteredData, sortBy, reverseSortDirection]);
 
+  const toggleRow = (id: number) => {
+    const newSelection = currentSelection.includes(id) 
+      ? currentSelection.filter((item) => item !== id) 
+      : [...currentSelection, id];
+    handleSelectionChange(newSelection);
+  };
 
-  // Handlers
-  const toggleRow = (id: number) =>
-    setSelection((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
-    );
-
-  const toggleAll = () =>
-    setSelection((current) => (current.length === sortedData.length ? [] : sortedData.map((item) => item.slNo)));
+  const toggleAll = () => {
+    const newSelection = currentSelection.length === sortedData.length 
+      ? [] 
+      : sortedData.map((item) => item.slNo);
+    handleSelectionChange(newSelection);
+  };
 
   const setSorting = (field: keyof Invoice) => {
     if (!sort) return;
@@ -155,9 +161,8 @@ export function InvoiceTable({
     setSortBy(field);
   };
 
-  // Render Rows
   const rows = sortedData.map((item) => {
-    const isSelected = selection.includes(item.slNo);
+    const isSelected = currentSelection.includes(item.slNo);
 
     return (
       <Table.Tr key={item.slNo} bg={isSelected ? 'var(--mantine-color-blue-light)' : undefined}>
@@ -168,12 +173,12 @@ export function InvoiceTable({
         )}
 
         {columns.map((col) => (
-          <Table.Td key={col}>
+          <Table.Td key={col} bg={sortBy === col ? 'var(--mantine-color-blue-light)' : undefined}>
             {col === 'status' ? (
               <Badge color={getStatusColor(item.status)} variant="light">
                 {item.status}
               </Badge>
-            ) : typeof item[col] === 'number' && (col as string).toLowerCase().includes('amount') || (col as string).includes('Deduction') || (col as string).includes('Payable') ? (
+            ) : typeof item[col] === 'number' && ((col as string).toLowerCase().includes('amount') || (col as string).includes('Deduction') || (col as string).includes('Payable')) ? (
               <Text size="xs">{formatCurrency(item[col] as number)}</Text>
             ) : (
               <Text size="xs">{item[col]}</Text>
@@ -183,15 +188,15 @@ export function InvoiceTable({
 
         {actions && (
           <Table.Td>
-            <Group gap={0} justify="flex-end">
-              <ActionIcon variant="subtle" color="gray">
-                <IconEye style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+            <Group justify='space-between' wrap="nowrap">
+              <ActionIcon variant="filled" color="gray">
+                <IconEye style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
               </ActionIcon>
-              <ActionIcon variant="subtle" color="blue">
-                <IconPencil style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+              <ActionIcon variant="filled" color="blue">
+                <IconPencil style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
               </ActionIcon>
-              <ActionIcon variant="subtle" color="red">
-                <IconTrash style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+              <ActionIcon variant="filled" color="red">
+                <IconTrash style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
               </ActionIcon>
             </Group>
           </Table.Td>
@@ -202,27 +207,31 @@ export function InvoiceTable({
 
   return (
     <ScrollArea>
-      <Table verticalSpacing="sm" highlightOnHover style={style}>
+      <Table verticalSpacing="sm" striped highlightOnHover withColumnBorders withTableBorder style={style}>
         <Table.Thead>
           <Table.Tr>
             {multiSelection && (
-              <Table.Th style={{ width: rem(40) }}>
+              <Table.Th style={{ width: rem(40) }} >
                 <Checkbox
                   onChange={toggleAll}
-                  checked={selection.length === sortedData.length && sortedData.length > 0}
-                  indeterminate={selection.length > 0 && selection.length !== sortedData.length}
+                  checked={currentSelection.length === sortedData.length && sortedData.length > 0}
+                  indeterminate={currentSelection.length > 0 && currentSelection.length !== sortedData.length}
                 />
               </Table.Th>
             )}
 
             {columns.map((col) => (
-              <Table.Th key={col}>
+              <Table.Th key={col} bg={sortBy === col ? 'var(--mantine-color-blue-light)' : undefined}>
                 {sort ? (
-                   <UnstyledButton onClick={() => setSorting(col)} className={classes.control}>
+                   <UnstyledButton onClick={() => setSorting(col)} className={classes.control} w={"100%"}>
                    <Group justify="space-between">
                      <Text fw={700} size="sm">{HEADER_LABELS[col] || col}</Text>
                      <Center className={classes.icon}>
-                       <IconSelector style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+                       {sortBy === col ? (
+                         reverseSortDirection ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />
+                       ) : (
+                         <IconSelector style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+                       )}
                      </Center>
                    </Group>
                  </UnstyledButton>
@@ -232,7 +241,7 @@ export function InvoiceTable({
               </Table.Th>
             ))}
 
-            {actions && <Table.Th />}
+            {actions && <Table.Th><Text fw={700} size="sm">Actions</Text></Table.Th>}
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>{rows}</Table.Tbody>
