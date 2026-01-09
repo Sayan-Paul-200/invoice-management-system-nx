@@ -8,6 +8,15 @@
     },
     {
       "path": "./packages/backend"
+    },
+    {
+      "path": "./libs/db"
+    },
+    {
+      "path": "./libs/iam"
+    },
+    {
+      "path": "./libs/iam"
     }
   ]
 }

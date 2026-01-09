@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:18
+    shm_size: 128mb
+    ports:
+      - "5432:5432"
+    env_file: config/.env.development
+    environment: {}
+    volumes:
+      - ims-pgdata:/var/lib/postgresql/18/docker
+
+volumes:
+  ims-pgdata: {}
+
+networks:
+  default:
+    name: ims-network
