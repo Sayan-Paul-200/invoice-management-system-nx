@@ -25,7 +25,7 @@ export function InvoiceStatusDonutChart({ invoices }: InvoiceStatusDonutChartPro
     // Mapping status to Mantine theme colors
     const colors: Record<string, string> = {
       'Paid': 'teal.6',
-      'Under process': 'blue.6',
+      'Under Process': 'blue.6',
       'Cancelled': 'red.6',
       'Credit Note Issued': 'yellow.6'
     };

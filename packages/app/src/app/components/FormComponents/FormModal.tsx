@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { Drawer, PasswordInput, Textarea, TextInput, NumberInput, Switch, Select, Checkbox, Radio, Group, Stack, Button, Alert, FileInput, Box } from '@mantine/core';
+import { Modal, PasswordInput, Textarea, TextInput, NumberInput, Switch, Select, Checkbox, Radio, Group, Stack, Button, Alert, FileInput, Box } from '@mantine/core';
 import { DatePickerInput, DateValue } from '@mantine/dates';
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { IconInfoCircle, IconUpload } from '@tabler/icons-react';
@@ -39,7 +39,7 @@ export type FormField = {
   hidden?: boolean | ((values: Record<string, FormValue>) => boolean);
   disabled?: boolean | ((values: Record<string, FormValue>) => boolean);
   minDate?: Date | ((values: Record<string, FormValue>) => Date | undefined | null);
-maxDate?: Date | ((values: Record<string, FormValue>) => Date | undefined | null);
+  maxDate?: Date | ((values: Record<string, FormValue>) => Date | undefined | null);
   accept?: string; // For FileInput
 
   defaultTextValue?: string | null;
@@ -142,7 +142,7 @@ export function FormModal({
   };
 
   return (
-    <Drawer closeOnClickOutside={false} position={position} opened={opened} onClose={onClose} title={title} size={size}>
+    <Modal closeOnClickOutside={false} opened={opened} onClose={onClose} title={title} size={size}>
       <form onSubmit={form.onSubmit(handleOnSubmit)}>
         {alert && (
           <Stack align="stretch" justify="flex-start" gap="sm">
@@ -163,7 +163,7 @@ export function FormModal({
           </Button>
         </Stack>
       </form>
-    </Drawer>
+    </Modal>
   );
 }
 

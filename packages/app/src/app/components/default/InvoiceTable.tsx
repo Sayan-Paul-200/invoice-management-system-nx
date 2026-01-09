@@ -67,7 +67,7 @@ const formatCurrency = (amount: number) =>
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Paid': return 'teal';
-    case 'Under process': return 'blue';
+    case 'Under Process': return 'blue';
     case 'Cancelled': return 'red';
     case 'Credit Note Issued': return 'yellow';
     default: return 'gray';

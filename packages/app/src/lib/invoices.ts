@@ -25,7 +25,7 @@ export interface Invoice {
   otherDeduction: number;
   totalDeduction: number;
   netPayable: number;
-  status: 'Paid' | 'Cancelled' | 'Under process' | 'Credit Note Issued';
+  status: 'Paid' | 'Cancelled' | 'Under Process' | 'Credit Note Issued';
   amountPaidByClient: number;
   paymentDate: string;
   balancePendingAmount: number;
@@ -159,7 +159,7 @@ export const DUMMY_INVOICES: Invoice[] = [
     otherDeduction: 0,
     totalDeduction: 1904000.5562,
     netPayable: 9896002.9838,
-    status: 'Under process',
+    status: 'Under Process',
     amountPaidByClient: 9896002.9838,
     paymentDate: '13 Jul 25',
     balancePendingAmount: 0,
@@ -225,7 +225,7 @@ export const DUMMY_INVOICES: Invoice[] = [
     otherDeduction: 0,
     totalDeduction: 1904000.927,
     netPayable: 9896004.973,
-    status: 'Under process',
+    status: 'Under Process',
     amountPaidByClient: 0,
     paymentDate: '15 Jul 25',
     balancePendingAmount: 9896004.973,
@@ -258,7 +258,7 @@ export const DUMMY_INVOICES: Invoice[] = [
     otherDeduction: 0,
     totalDeduction: 1904001.1124,
     netPayable: 9896005.9676,
-    status: 'Under process',
+    status: 'Under Process',
     amountPaidByClient: 0,
     paymentDate: '16 Jul 25',
     balancePendingAmount: 9896005.9676,
@@ -291,7 +291,7 @@ export const DUMMY_INVOICES: Invoice[] = [
     otherDeduction: 0,
     totalDeduction: 1954001.2978,
     netPayable: 9846006.9622,
-    status: 'Under process',
+    status: 'Under Process',
     amountPaidByClient: 0,
     paymentDate: '17 Jul 25',
     balancePendingAmount: 9846006.9622,
@@ -324,7 +324,7 @@ export const DUMMY_INVOICES: Invoice[] = [
     otherDeduction: 0,
     totalDeduction: 1904001.4832,
     netPayable: 9896007.9568,
-    status: 'Under process',
+    status: 'Under Process',
     amountPaidByClient: 0,
     paymentDate: '18 Jul 25',
     balancePendingAmount: 9896007.9568,
@@ -357,7 +357,7 @@ export const DUMMY_INVOICES: Invoice[] = [
     otherDeduction: 0,
     totalDeduction: 207590,
     netPayable: 795410.00,
-    status: 'Under process',
+    status: 'Under Process',
     amountPaidByClient: 0,
     paymentDate: '19 Jul 25',
     balancePendingAmount: 795410.00,

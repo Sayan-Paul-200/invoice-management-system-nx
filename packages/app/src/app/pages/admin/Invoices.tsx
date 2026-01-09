@@ -197,10 +197,19 @@ const Invoices = () => {
         if (values.netPayable !== netPayable) form.setFieldValue('netPayable', netPayable);
         if (values.balancePendingAmount !== balance) form.setFieldValue('balancePendingAmount', balance);
     } else {
-        // Reset these if not paid
+        // Reset deductions if not paid
         if (values.totalDeduction !== 0) form.setFieldValue('totalDeduction', 0);
-        if (values.netPayable !== 0) form.setFieldValue('netPayable', 0);
-        if (values.balancePendingAmount !== 0) form.setFieldValue('balancePendingAmount', 0);
+        
+        // 👇 CHANGED: Logic to handle 'Under Process'
+        if (values.status === 'Under Process') {
+            // If Under Process, Net Payable and Balance = Total Amount (Assuming no deductions applied yet)
+            if (values.netPayable !== totalAmt) form.setFieldValue('netPayable', totalAmt);
+            if (values.balancePendingAmount !== totalAmt) form.setFieldValue('balancePendingAmount', totalAmt);
+        } else {
+            // Default reset for other non-paid statuses
+            if (values.netPayable !== 0) form.setFieldValue('netPayable', 0);
+            if (values.balancePendingAmount !== 0) form.setFieldValue('balancePendingAmount', 0);
+        }
     }
   };
 
@@ -249,7 +258,7 @@ const Invoices = () => {
     },
 
     // 16-17 Status & Remarks
-    { fieldType: 'Select', label: 'Status', formKey: 'status', required: true, options: options.statuses.map(s => ({ label: s, value: s })), defaultSelectedOption: 'Under process' },
+    { fieldType: 'Select', label: 'Status', formKey: 'status', required: true, options: options.statuses.map(s => ({ label: s, value: s })), defaultSelectedOption: 'Under Process' },
     { fieldType: 'Textarea', label: 'Remarks', formKey: 'remarks', required: false },
 
     // 18-29 Payment Details (Visible only if Status is Paid)
@@ -288,15 +297,19 @@ const Invoices = () => {
         }
     },
     
-    // 👇 CHANGED: Removed the 'hidden' property so it's always visible (including when Paid)
     { 
         fieldType: 'Number', 
         label: 'Balance / Pending Amount', 
         formKey: 'balancePendingAmount', 
         disabled: true, 
-        // hidden: (v) => v.status !== 'Paid', <--- Removed this
-        // Validation: Must be zero
-        validate: (val) => Number(val) !== 0 ? 'Net Payable should be equal to Amount Paid by Client.' : null
+        // Validation: Must be zero ONLY if status is Paid. 
+        // 👇 CHANGED: Validation updated to allow non-zero balance if 'Under Process'
+        validate: (val, values) => {
+            if (values.status === 'Paid' && Number(val) !== 0) {
+                return 'Net Payable should be equal to Amount Paid by Client.';
+            }
+            return null;
+        }
     },
   ];
 
