@@ -30,9 +30,10 @@ interface InvoiceTableProps {
   multiSelection?: boolean; 
   sort?: boolean;
   style?: React.CSSProperties;
-  // Added optional props for controlled selection
   selection?: number[];
   onSelectionChange?: (selectedIds: number[]) => void;
+  // 👇 Added onEdit prop
+  onEdit?: (invoice: Invoice) => void;
 }
 
 const DEFAULT_COLUMNS: (keyof Invoice)[] = [
@@ -85,14 +86,13 @@ export function InvoiceTable({
   sort = false,
   style,
   selection: controlledSelection,
-  onSelectionChange
+  onSelectionChange,
+  onEdit // Destructure new prop
 }: InvoiceTableProps) {
-  // Internal state for when component is uncontrolled
   const [internalSelection, setInternalSelection] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState<keyof Invoice | null>(null);
   const [reverseSortDirection, setReverseSortDirection] = useState(false);
   
-  // Use controlled selection if provided, otherwise use internal state
   const currentSelection = controlledSelection !== undefined ? controlledSelection : internalSelection;
 
   const handleSelectionChange = (newSelection: number[]) => {
@@ -192,7 +192,8 @@ export function InvoiceTable({
               <ActionIcon variant="filled" color="gray">
                 <IconEye style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
               </ActionIcon>
-              <ActionIcon variant="filled" color="blue">
+              {/* 👇 Updated Pencil Icon with onEdit click handler */}
+              <ActionIcon variant="filled" color="blue" onClick={() => onEdit?.(item)}>
                 <IconPencil style={{ width: rem(18), height: rem(18) }} stroke={1.5} />
               </ActionIcon>
               <ActionIcon variant="filled" color="red">
